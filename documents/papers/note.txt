@@ -1,0 +1,8 @@
+YouTube Recommendation Algorithm
+    Deep Neural Networks for YouTube Recommendations
+        เปเปอร์หลักจากทีมวิศวกร Google ที่อธิบายกลไกการทำงานของระบบแนะนำวิดีโอ โดยระบุถึงความสำคัญของ Click-Through Rate (CTR) และ Expected Watch Time
+
+Visual Attention และ Facial Emotion
+    Matthias_Kummerer_Saliency_Benchmarking_Made_ECCV_2018
+    Case study: https://neuroads.ai/tools/youtube-thumbnail-optimizer 
+    

@@ -1,0 +1,13 @@
+.youtube_env
+frontend
+documents
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.git
+.gitignore
+.env
+README.md
+note.txt
+
