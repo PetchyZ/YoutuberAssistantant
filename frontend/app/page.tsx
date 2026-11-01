@@ -132,7 +132,7 @@ export default function Dashboard() {
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-2 bg-indigo-500/10 text-indigo-400 px-4 py-1.5 rounded-full border border-indigo-500/20 text-sm font-medium">
             <Sparkles className="w-4 h-4" /> AI Content Creator Assistant -
-            Dashboard
+            Dashboard v0.1.0
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
             YouTube Analytics & Strategy
@@ -147,14 +147,22 @@ export default function Dashboard() {
           <div className="flex gap-2 md:gap-4 min-w-max pb-1">
             {(
               [
-                { id: "thumbnail", label: "Thumbnail Analysis", icon: ImageIcon },
+                {
+                  id: "thumbnail",
+                  label: "Thumbnail Analysis",
+                  icon: ImageIcon,
+                },
                 {
                   id: "performance",
                   label: "Performance Drivers",
                   icon: BarChart3,
                 },
                 { id: "trend", label: "Trend & Velocity", icon: LineChart },
-                { id: "matchmaking", label: "Creator Matchmaking", icon: Users },
+                {
+                  id: "matchmaking",
+                  label: "Creator Matchmaking",
+                  icon: Users,
+                },
               ] as const
             ).map((tab) => (
               <button
@@ -524,10 +532,8 @@ export default function Dashboard() {
                     Performance Verdict
                   </span>
                   <p className="text-sm text-slate-300 mt-1">
-                    {
-                      performanceData.performance_analysis
-                        ?.estimated_performance_verdict ?? "-"
-                    }
+                    {performanceData.performance_analysis
+                      ?.estimated_performance_verdict ?? "-"}
                   </p>
                 </div>
 
@@ -658,7 +664,8 @@ export default function Dashboard() {
                       Channel Velocity Score
                     </div>
                     <div className="text-3xl font-extrabold text-indigo-400 mt-1">
-                      {trendData.performance_summary?.channel_velocity_score ?? "-"}
+                      {trendData.performance_summary?.channel_velocity_score ??
+                        "-"}
                     </div>
                   </div>
                   <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800">
@@ -678,15 +685,17 @@ export default function Dashboard() {
                     🔥 Emerging Topics
                   </h3>
                   <ul className="space-y-2">
-                    {trendData.emerging_topics?.map((topic: string, index: number) => (
-                      <li
-                        key={index}
-                        className="bg-slate-950/40 p-3 rounded-lg border border-slate-800/60 text-slate-300 text-sm flex items-start gap-2"
-                      >
-                        <span className="text-indigo-400 font-bold">•</span>{" "}
-                        {topic}
-                      </li>
-                    ))}
+                    {trendData.emerging_topics?.map(
+                      (topic: string, index: number) => (
+                        <li
+                          key={index}
+                          className="bg-slate-950/40 p-3 rounded-lg border border-slate-800/60 text-slate-300 text-sm flex items-start gap-2"
+                        >
+                          <span className="text-indigo-400 font-bold">•</span>{" "}
+                          {topic}
+                        </li>
+                      ),
+                    )}
                   </ul>
                 </div>
 
@@ -696,15 +705,17 @@ export default function Dashboard() {
                     💡 Content Gaps
                   </h3>
                   <ul className="space-y-2">
-                    {trendData.content_gaps?.map((gap: string, index: number) => (
-                      <li
-                        key={index}
-                        className="bg-slate-950/40 p-3 rounded-lg border border-slate-800/60 text-slate-300 text-sm flex items-start gap-2"
-                      >
-                        <span className="text-indigo-400 font-bold">•</span>{" "}
-                        {gap}
-                      </li>
-                    ))}
+                    {trendData.content_gaps?.map(
+                      (gap: string, index: number) => (
+                        <li
+                          key={index}
+                          className="bg-slate-950/40 p-3 rounded-lg border border-slate-800/60 text-slate-300 text-sm flex items-start gap-2"
+                        >
+                          <span className="text-indigo-400 font-bold">•</span>{" "}
+                          {gap}
+                        </li>
+                      ),
+                    )}
                   </ul>
                 </div>
               </div>
@@ -715,19 +726,21 @@ export default function Dashboard() {
                   🚀 Actionable Next Steps
                 </h3>
                 <div className="space-y-3">
-                  {trendData.actionable_next_steps?.map((step: string, index: number) => (
-                    <div
-                      key={index}
-                      className="bg-indigo-950/20 border border-indigo-500/20 p-4 rounded-xl flex items-start gap-3"
-                    >
-                      <div className="bg-indigo-500/10 text-indigo-400 font-bold px-2.5 py-1 rounded-lg text-sm">
-                        #{index + 1}
+                  {trendData.actionable_next_steps?.map(
+                    (step: string, index: number) => (
+                      <div
+                        key={index}
+                        className="bg-indigo-950/20 border border-indigo-500/20 p-4 rounded-xl flex items-start gap-3"
+                      >
+                        <div className="bg-indigo-500/10 text-indigo-400 font-bold px-2.5 py-1 rounded-lg text-sm">
+                          #{index + 1}
+                        </div>
+                        <p className="text-slate-200 text-sm leading-relaxed self-center">
+                          {step}
+                        </p>
                       </div>
-                      <p className="text-slate-200 text-sm leading-relaxed self-center">
-                        {step}
-                      </p>
-                    </div>
-                  ))}
+                    ),
+                  )}
                 </div>
               </div>
             </div>
