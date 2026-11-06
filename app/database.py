@@ -20,6 +20,9 @@ SessionLocal = sessionmaker(
 class Base(DeclarativeBase):
     pass
 
+def create_db_and_tables():
+    Base.metadata.create_all(bind=engine)
+
 # 4. Database Dependency
 def get_db():
     with SessionLocal() as db:
