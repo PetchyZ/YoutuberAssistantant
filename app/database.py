@@ -1,21 +1,27 @@
-from sqlmodel import create_engine, SQLModel, Session
+from sqlalchemy import create_engine
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
+
 from app.core.config import settings
 
+# 1. Database Engine
 engine = create_engine(
     settings.DATABASE_URL,
-    pool_pre_ping=True)
+    pool_pre_ping = True
+)
 
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
+# 2. Session Factory
+SessionLocal = sessionmaker(
+    bind=engine,
+    autoflush=False,
+    expire_on_commit=False
+)
 
-def get_session():
-    with Session(engine) as session:
-        yield session
+# 3. Base Model
+class Base(DeclarativeBase):
+    pass
 
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
-
-def get_session():
-    with Session(engine) as session:
-        yield session
-
+# 4. Database Dependency
+def get_db():
+    with SessionLocal() as db:
+        yield db
+        

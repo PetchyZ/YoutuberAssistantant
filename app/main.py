@@ -1,7 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.v1.endpoints import performance, thumbnail_analytics, trend, matchmaking, video_quality
+
+from sqlalchemy.orm import Session
+from app.database import get_db
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -27,6 +30,10 @@ app.add_middleware(
 @app.get("/")
 def root():
     return {"message": f"Welcome to {settings.PROJECT_NAME}"}
+
+@router.get("/users")
+def get_users(db: Session = Depends(get_db)):
+    pass
 
 if __name__ == "__main__":
     import uvicorn

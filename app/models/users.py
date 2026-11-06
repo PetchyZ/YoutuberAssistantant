@@ -1,19 +1,23 @@
-from sqlmodel import SQLModel, Field
-from typing import Optional
-from datetime import datetime, timezone
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
 
-class AnalysisHistory(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    video_id: str = Field(index=True)
-    video_title: Optional[str] = None
-    thumbnail_url: Optional[str] = None
+from app.database import Base
 
-    # Score evaluate
-    thumbnail_score: Optional[float] = None
-    video_retention_score: Optional[str] = None
+class User(Base):
+    __tablename__ = "users"
+    id = Mapped[int] = mapped_column(
+        primary_key = True,
+        index = True
+    )
 
-    # Evaluation Summary
-    ai_evaluation_summary: Optional[str] = None
+    username: Mapped[str] = mapped_column(
+        String(100),
+        nullable = False
+    )
 
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    email: Mapped[str] = mapped_column(
+        String(255),
+        unique=True,
+        nullable=False
+    )
 

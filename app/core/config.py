@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "AI Creator Assistant API"
     YOUTUBE_API_KEY: str
     GEMINI_API_KEY: str
-    DATABASE_KEY: str
+    DATABASE_URL: str
     
     class Config:
         env_file = ".env"
