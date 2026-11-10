@@ -5,9 +5,9 @@ from app.api.v1.endpoints import performance, thumbnail_analytics, trend, matchm
 
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from app.database import get_db
+from app.db import get_db
 from app.models.users import User
-from app.database import create_db_and_tables
+from app.db import create_db_and_tables
 
 app = FastAPI(
     title=settings.PROJECT_NAME,

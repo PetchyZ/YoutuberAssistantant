@@ -96,17 +96,10 @@ class TrendAnalyticsService:
         try:
 
             response = await self.generate_with_retry(
-                                                    primary_model='gemini-3.5-flash',
-                                                    contents=prompt,
+                        primary_model='gemini-3.5-flash',
+                        contents=prompt,
                         )
             
-            # response = self.client.models.generate_content(
-            #     model = 'gemini-3.6-flash',
-            #     contents = prompt,
-            #     config = types.GenerateContentConfig(
-            #         response_mime_type = "application/json"
-            #     )
-            # )
             result_json = json.loads(response.text)
             return result_json
 

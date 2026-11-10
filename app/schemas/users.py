@@ -11,3 +11,4 @@ class UserResponse(BaseModel):  # Data from FastAPI to Frontend
 
     model_config = ConfigDict(from_attributes=True)
 
+
