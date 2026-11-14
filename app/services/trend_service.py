@@ -87,6 +87,8 @@ class TrendAnalyticsService:
                 "channel_velocity_score": <number 1-10 relative to market>,
                 "status": "<Behind Trend / On Par / Leading Trend>"
             }},
+            "market_velocity": <number; use the Market Avg Velocity value above exactly>,
+            "avg_velocity": <number; use the Channel Avg Velocity value above exactly>,
             "emerging_topics": [<string array of top 3 hot topics in this category>],
             "content_gaps": [<string array of 2-3 content ideas the channel is missing>],
             "actionable_next_steps": [<string array of 2 strategic advice>]
@@ -101,6 +103,10 @@ class TrendAnalyticsService:
                         )
             
             result_json = json.loads(response.text)
+            # These are calculated metrics, so use the exact values from our code
+            # instead of relying on the model to copy them accurately.
+            result_json["market_velocity"] = avg_market_velocity
+            result_json["avg_velocity"] = avg_our_velocity
             return result_json
 
         except Exception as e:

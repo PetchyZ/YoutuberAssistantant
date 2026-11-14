@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import JSON, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -20,16 +20,16 @@ class Thumbnail(Base):
         nullable = False
     )
 
-    strength_comments: Mapped[str] = mapped_column(
-        String(255),
+    strength_comments: Mapped[list[str]] = mapped_column(
+        JSON
     )
 
-    weakness_comments: Mapped[str] = mapped_column(
-        String(255)
+    weakness_comments: Mapped[list[str]] = mapped_column(
+        JSON
     )
 
-    recommend_comments: Mapped[str] = mapped_column(
-        String(255)
+    recommend_comments: Mapped[list[str]] = mapped_column(
+        JSON
     )
 
     visual_clarity_score: Mapped[int] = mapped_column()

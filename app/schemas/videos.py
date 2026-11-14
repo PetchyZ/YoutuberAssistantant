@@ -2,7 +2,7 @@ from pydantic import BaseModel, ConfigDict
 
 class VideoAdd(BaseModel):    # Data from Frontend to FastAPI
     video_code: str
-    email: str
+    title: str
 
 class VideoResponse(BaseModel):  # Data from FastAPI to Frontend
     id: int

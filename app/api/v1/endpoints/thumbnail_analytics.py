@@ -4,8 +4,10 @@ from app.services.youtube_service import YouTubeService
 from app.services.thumbnail_service import ThumbnailService
 
 from app.models.thumbnails import Thumbnail
+from app.models.videos import Video
 from sqlalchemy.orm import Session
 from app.db.session import get_db
+from sqlalchemy import select
 
 router = APIRouter()
 
@@ -52,10 +54,27 @@ async def analyze_video_thumbnail(
             image_url = thumbnail_url,
             category_context=category_context
     )
+        
+        #database
 
-        print(analysis_result["ai_evaluation"])
-        record = Thumbnail(
-            video_id=video_id,
+        existing = db.scalar(
+            select(Video).where(Video.video_code == video_id)
+        )
+
+        if existing:
+            video_record = existing
+        else:      
+            video_record = Video(
+                video_code=video_id,
+                title=video_data['title']
+            )
+            db.add(video_record)
+            db.commit()
+            db.refresh(video_record)
+        
+        thumbnail_record = Thumbnail(
+            video_id=video_record.id,
+            image_path=f"https://img.youtube.com/vi/{video_record.video_code}/maxresdefault.jpg",
             strength_comments=analysis_result["ai_evaluation"]["strengths"],
             weakness_comments=analysis_result["ai_evaluation"]["weaknesses"],
             recommend_comments=analysis_result["ai_evaluation"]["actionable_recommendations"],
@@ -64,9 +83,9 @@ async def analyze_video_thumbnail(
             emotional_hook_score=analysis_result["ai_evaluation"]["criteria_breakdown"]["emotional_hook"]
         )
 
-        db.add(record)
+        db.add(thumbnail_record)
         db.commit()
-        db.refresh(record)
+        db.refresh(thumbnail_record)
 
     except Exception as e:
             print("====== BACKEND ERROR TRACEBACK ======")

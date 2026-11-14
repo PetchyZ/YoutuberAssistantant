@@ -115,6 +115,7 @@ class YouTubeService:
                 stats = item.get("statistics", {})
                 results.append({
                     "video_id" : item["id"],
+                    "channel_name": snippet.get("channelTitle"),
                     "title" : snippet.get("title"),
                     "published_at" : snippet.get("publishedAt"),
                     "view_count": int(stats.get("viewCount", 0))
