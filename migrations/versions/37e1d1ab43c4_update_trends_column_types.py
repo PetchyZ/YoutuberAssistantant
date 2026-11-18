@@ -24,15 +24,18 @@ def upgrade() -> None:
     op.alter_column('trends', 'emerging_topics',
                existing_type=sa.VARCHAR(length=255),
                type_=sa.JSON(),
-               existing_nullable=False)
+               existing_nullable=False,
+               postgresql_using='emerging_topics::json')
     op.alter_column('trends', 'content_gaps',
                existing_type=sa.VARCHAR(length=255),
                type_=sa.JSON(),
-               existing_nullable=False)
+               existing_nullable=False,
+               postgresql_using='content_gaps::json')
     op.alter_column('trends', 'next_step_recommends',
                existing_type=sa.VARCHAR(length=255),
                type_=sa.JSON(),
-               existing_nullable=False)
+               existing_nullable=False,
+               postgresql_using='next_step_recommends::json')
     # ### end Alembic commands ###
 
 

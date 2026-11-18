@@ -134,7 +134,7 @@ async def analyze_matchmaking(
                                 "avg_views": cand_views
                             }
                         )
-                        print(f"✅ Upserted channel {cand_id} into ChromaDB successfully!")
+                        print(f"✅ Upserted channel {cand_id} into PostgreSQL/pgvector successfully!")
 
         except Exception as auto_err:
             print(f"❌ Auto-discovery Exception: {auto_err}")

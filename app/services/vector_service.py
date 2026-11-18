@@ -1,80 +1,103 @@
-import chromadb
-from chromadb.utils import embedding_functions
+from functools import lru_cache
+
+from sentence_transformers import SentenceTransformer
+from sqlalchemy import select
+
+from app.db.session import SessionLocal
+from app.models.channel_characteristics import Channel_charisteristic
+from app.models.channels import Channel
+
+
+@lru_cache(maxsize=1)
+def _get_embedding_model() -> SentenceTransformer:
+    # MatchmakingService is constructed per request, so cache the heavy model
+    # to avoid loading BGE-M3 from disk repeatedly.
+    return SentenceTransformer("BAAI/bge-m3")
+
 
 class VectorService:
+    """Create channel embeddings and search them in PostgreSQL with pgvector."""
+
     def __init__(self):
-        # Create Persistent Client or In-Memory Client
-        self.client = chromadb.Client()
+        # BGE-M3 returns 1,024-dimensional multilingual embeddings.
+        self.embedding_model = _get_embedding_model()
 
-        # Use Default Embedding Function or HuggingFace / Sentence Transformers
-        self.embedding_fn = embedding_functions.DefaultEmbeddingFunction()
-
-        # Create or pull Collection for Channels
-        self.collection = self.client.get_or_create_collection(
-            name="youtube_channels",
-            embedding_function=self.embedding_fn,
-            metadata={"hnsw:space": "cosine"} # Use Cosine Similarity followed by Research Criteria  
-        )
+    def _embed(self, text: str) -> list[float]:
+        text = text.strip()
+        if not text:
+            raise ValueError("profile_text cannot be empty")
+        return self.embedding_model.encode(text).tolist()
 
     def upsert_channel_profile(self, channel_id: str, profile_text: str, metadata: dict):
-        """
-        Save and update Profile Embedding channel in vector DB
-        """
+        """Insert or update the channel and its profile embedding."""
         clean_metadata = {
-            "channel_id" : channel_id,
-            "channel_title" : str(metadata.get("channel_title", metadata.get("title", "Unknown"))),
-            "category" : str(metadata.get("category", "")),
-            "subscriber_band" : str(metadata.get("subscriber_band", "")),
-            "avg_views" : int(metadata.get("avg_views", 0))
+            "channel_title": str(metadata.get("channel_title", metadata.get("title", "Unknown"))),
+            "category": str(metadata.get("category", "")),
+            "subscriber_band": str(metadata.get("subscriber_band", "")),
+            "content_style": str(metadata.get("content_style", "")),
+            "key_topics": str(metadata.get("key_topics", "")),
+            "avg_views": int(metadata.get("avg_views", 0) or 0),
         }
+        embedding = self._embed(profile_text)
 
-        self.collection.upsert(
-            documents = [profile_text.strip()],
-            metadatas = [clean_metadata],
-            ids=[channel_id]
-        )
+        with SessionLocal() as db:
+            channel = db.scalar(
+                select(Channel).where(Channel.channel_code == str(channel_id))
+            )
+            if channel is None:
+                channel = Channel(
+                    channel_code=str(channel_id),
+                    channel_name=clean_metadata["channel_title"],
+                )
+                db.add(channel)
+                db.flush()
+            else:
+                channel.channel_name = clean_metadata["channel_title"]
 
-        # เช็กจำนวนข้อมูลทั้งหมดใน Collection ที่กำลังใช้งาน
-        count = self.collection.count()
-        print(f"Total channels in DB: {count}")
+            characteristic = db.scalar(
+                select(Channel_charisteristic).where(
+                    Channel_charisteristic.channel_id == channel.id
+                )
+            )
+            if characteristic is None:
+                characteristic = Channel_charisteristic(channel_id=channel.id)
+                db.add(characteristic)
 
-        # ลองดึงข้อมูลทั้งหมดมาดู
-        all_data = self.collection.get()
-        print("Available IDs:", all_data.get("ids"))
+            characteristic.channel_vector = embedding
+            characteristic.profile_text = profile_text.strip()
+            characteristic.category = clean_metadata["category"]
+            characteristic.subscribe_band = clean_metadata["subscriber_band"]
+            characteristic.content_style = clean_metadata["content_style"]
+            characteristic.key_topics = clean_metadata["key_topics"]
+            characteristic.avg_views = clean_metadata["avg_views"]
+            db.commit()
 
     def find_similar_channels(self, profile_text: str, top_k: int = 5):
-        """
-        Find lookalike channels by Cosine Similarity score 
-        """
-        results = self.collection.query(
-            query_texts=[profile_text],
-            n_results=top_k,
-            include=["metadatas", "documents", "distances"]
-        )
+        """Return the nearest profiles by cosine similarity."""
+        query_vector = self._embed(profile_text)
+        distance = Channel_charisteristic.channel_vector.cosine_distance(query_vector)
 
-        similar_channels = []
+        with SessionLocal() as db:
+            rows = db.execute(
+                select(Channel, Channel_charisteristic, distance.label("distance"))
+                .join(
+                    Channel_charisteristic,
+                    Channel_charisteristic.channel_id == Channel.id,
+                )
+                .where(Channel_charisteristic.channel_vector.is_not(None))
+                .order_by(distance)
+                .limit(top_k)
+            ).all()
 
-        # convert ChromaDB structure to List of Dictionary
-        if results and results.get("ids") and len(results["ids"][0]) > 0:
-            ids = results["ids"][0]
-            metadatas = results["metadatas"][0]
-            documents = results["documents"][0]
-            distances = results["distances"][0]
-
-            for i in range(len(ids)):
-                distance = distances[i]
-                # Convert Cosine Distance to Similarity Score (0 - 1)
-                similarity_score = round(max(0.0, 1.0 - distance), 2)
-                metadata = metadatas[i] if metadatas else {}
-
-                similar_channels.append({
-                    "channel_id": ids[i],
-                    "channel_title": metadata.get("channel_title", "Unknown Channel"),
-                    "category" : metadata.get("category", ""),
-                    "subscriber_band" : metadata.get("subscriber_band", ""),
-                    "avg_views" : metadata.get("avg_views", 0),
-                    "similarity_score" : similarity_score, 
-                    "profile_summary" : documents[i]
-                })
-
-        return similar_channels
+        return [
+            {
+                "channel_id": channel.channel_code,
+                "channel_title": channel.channel_name or "Unknown Channel",
+                "category": characteristic.category or "",
+                "subscriber_band": characteristic.subscribe_band or "",
+                "avg_views": characteristic.avg_views or 0,
+                "similarity_score": round(max(0.0, 1.0 - float(distance_value)), 2),
+                "profile_summary": characteristic.profile_text,
+            }
+            for channel, characteristic, distance_value in rows
+        ]
