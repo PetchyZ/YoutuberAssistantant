@@ -123,7 +123,7 @@ async def analyze_matchmaking(
                         Key Topics: {', '.join(cand_topics)}
                         """
 
-                        matchmaking_service.vector_service.upsert_channel_profile(
+                        matchmaking_service.channel_profile_service.upsert_channel_profile(
                             channel_id=cand_id,
                             profile_text=profile_text,
                             metadata={
@@ -131,7 +131,9 @@ async def analyze_matchmaking(
                                 "channel_title": cand_profile['channel_title'],
                                 "category": cand_profile['category'],
                                 "subscriber_band": cand_profile['subscriber_band'],
-                                "avg_views": cand_views
+                                "content_style": cand_profile['content_style'],
+                                "key_topics": ', '.join(cand_topics),
+                                "avg_views": cand_views,
                             }
                         )
                         print(f"✅ Upserted channel {cand_id} into PostgreSQL/pgvector successfully!")

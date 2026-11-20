@@ -6,12 +6,14 @@ from google.genai.errors import ServerError
 from google.genai import types
 from app.core.config import settings
 from app.services.vector_service import VectorService
+from app.services.channel_profile_service import ChannelProfileService
 from app.core.exceptions import YouTubeAPIException
 
 class MatchmakingService:
     def __init__(self):
         self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
         self.vector_service = VectorService()
+        self.channel_profile_service = ChannelProfileService(self.vector_service)
 
     async def generate_with_retry(
             self, 
@@ -75,10 +77,12 @@ class MatchmakingService:
             "channel_title": str(target_profile.get("channel_title", "Unknown")),
             "category": str(target_profile.get("category", "")),
             "subscriber_band": str(target_profile.get("subscriber_band", "")),
-            "avg_views": avg_views
+            "content_style": str(target_profile.get("content_style", "")),
+            "key_topics": topics_str,
+            "avg_views": avg_views,
         }
 
-        self.vector_service.upsert_channel_profile(
+        self.channel_profile_service.upsert_channel_profile(
             channel_id=target_channel_id,
             profile_text=profile_text,
             metadata=metadata

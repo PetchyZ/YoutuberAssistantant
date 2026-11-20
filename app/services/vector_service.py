@@ -10,71 +10,26 @@ from app.models.channels import Channel
 
 @lru_cache(maxsize=1)
 def _get_embedding_model() -> SentenceTransformer:
-    # MatchmakingService is constructed per request, so cache the heavy model
-    # to avoid loading BGE-M3 from disk repeatedly.
+    # MatchmakingService is created per request, so keep the heavy model cached.
     return SentenceTransformer("BAAI/bge-m3")
 
 
 class VectorService:
-    """Create channel embeddings and search them in PostgreSQL with pgvector."""
+    """Create embeddings and search channel profiles with pgvector."""
 
     def __init__(self):
-        # BGE-M3 returns 1,024-dimensional multilingual embeddings.
         self.embedding_model = _get_embedding_model()
 
-    def _embed(self, text: str) -> list[float]:
-        text = text.strip()
-        if not text:
-            raise ValueError("profile_text cannot be empty")
-        return self.embedding_model.encode(text).tolist()
-
-    def upsert_channel_profile(self, channel_id: str, profile_text: str, metadata: dict):
-        """Insert or update the channel and its profile embedding."""
-        clean_metadata = {
-            "channel_title": str(metadata.get("channel_title", metadata.get("title", "Unknown"))),
-            "category": str(metadata.get("category", "")),
-            "subscriber_band": str(metadata.get("subscriber_band", "")),
-            "content_style": str(metadata.get("content_style", "")),
-            "key_topics": str(metadata.get("key_topics", "")),
-            "avg_views": int(metadata.get("avg_views", 0) or 0),
-        }
-        embedding = self._embed(profile_text)
-
-        with SessionLocal() as db:
-            channel = db.scalar(
-                select(Channel).where(Channel.channel_code == str(channel_id))
-            )
-            if channel is None:
-                channel = Channel(
-                    channel_code=str(channel_id),
-                    channel_name=clean_metadata["channel_title"],
-                )
-                db.add(channel)
-                db.flush()
-            else:
-                channel.channel_name = clean_metadata["channel_title"]
-
-            characteristic = db.scalar(
-                select(Channel_charisteristic).where(
-                    Channel_charisteristic.channel_id == channel.id
-                )
-            )
-            if characteristic is None:
-                characteristic = Channel_charisteristic(channel_id=channel.id)
-                db.add(characteristic)
-
-            characteristic.channel_vector = embedding
-            characteristic.profile_text = profile_text.strip()
-            characteristic.category = clean_metadata["category"]
-            characteristic.subscribe_band = clean_metadata["subscriber_band"]
-            characteristic.content_style = clean_metadata["content_style"]
-            characteristic.key_topics = clean_metadata["key_topics"]
-            characteristic.avg_views = clean_metadata["avg_views"]
-            db.commit()
+    def embed_text(self, text: str) -> list[float]:
+        """Convert profile or query text to a 1,024-dimensional BGE-M3 vector."""
+        normalized_text = text.strip()
+        if not normalized_text:
+            raise ValueError("text cannot be empty")
+        return self.embedding_model.encode(normalized_text).tolist()
 
     def find_similar_channels(self, profile_text: str, top_k: int = 5):
-        """Return the nearest profiles by cosine similarity."""
-        query_vector = self._embed(profile_text)
+        """Return channel profiles ranked by cosine similarity to the text."""
+        query_vector = self.embed_text(profile_text)
         distance = Channel_charisteristic.channel_vector.cosine_distance(query_vector)
 
         with SessionLocal() as db:
