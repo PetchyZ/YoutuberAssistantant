@@ -72,29 +72,30 @@ class MatchmakingService:
         """
 
         # 2. Save/Update channel in Vector DB
-        metadata = {
-            "channel_id": str(target_channel_id),
-            "channel_title": str(target_profile.get("channel_title", "Unknown")),
-            "category": str(target_profile.get("category", "")),
-            "subscriber_band": str(target_profile.get("subscriber_band", "")),
-            "content_style": str(target_profile.get("content_style", "")),
-            "key_topics": topics_str,
-            "avg_views": avg_views,
-        }
+        # metadata = {
+        #     "channel_id": str(target_channel_id),
+        #     "channel_title": str(target_profile.get("channel_title", "Unknown")),
+        #     "category": str(target_profile.get("category", "")),
+        #     "subscriber_band": str(target_profile.get("subscriber_band", "")),
+        #     "content_style": str(target_profile.get("content_style", "")),
+        #     "key_topics": topics_str,
+        #     "avg_views": avg_views,
+        # }
 
-        self.channel_profile_service.upsert_channel_profile(
-            channel_id=target_channel_id,
-            profile_text=profile_text,
-            metadata=metadata
-        )
+        # self.channel_profile_service.upsert_channel_profile(
+        #     channel_id=target_channel_id,
+        #     profile_text=profile_text,
+        #     metadata=metadata
+        # )
 
         # 3. Find lookalike channels
-        raw_similarity_results = self.vector_service.find_similar_channels(profile_text, top_k=5)
+        raw_similarity_results = self.vector_service.find_similar_channels(
+            profile_text,
+            top_k=5,
+            exclude_channel_id=target_channel_id,
+        )
 
-        similarity_results = [
-            channel for channel in raw_similarity_results 
-            if channel.get("channel_id") != target_channel_id
-        ][:3]
+        similarity_results = raw_similarity_results[:3]
 
         if not similarity_results:
             return {

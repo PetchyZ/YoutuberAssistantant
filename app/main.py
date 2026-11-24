@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api.v1.endpoints import performance, thumbnail_analytics, trend, matchmaking, video_quality
+from app.api.v1.endpoints import performance, thumbnail_analytics, trend, matchmaking, video_quality, channel_profile
 
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -21,6 +21,7 @@ app.include_router(performance.router, prefix="/api/v1/performance", tags=["Perf
 app.include_router(video_quality.router, prefix="/api/v1/video-quality", tags=["Video quality analytics"])
 app.include_router(trend.router, prefix="/api/v1/trend", tags=["Trending Analytics"])
 app.include_router(matchmaking.router, prefix="/api/v1/matchmaking", tags=["Matchmaking Player"])
+app.include_router(channel_profile.router, prefix="/api/v1/channel_profile", tags=["Channel Profile"])
 
 app.add_middleware(
     CORSMiddleware,

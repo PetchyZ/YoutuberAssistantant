@@ -27,10 +27,22 @@ class VectorService:
             raise ValueError("text cannot be empty")
         return self.embedding_model.encode(normalized_text).tolist()
 
-    def find_similar_channels(self, profile_text: str, top_k: int = 5):
-        """Return channel profiles ranked by cosine similarity to the text."""
+    def find_similar_channels(
+        self,
+        profile_text: str,
+        top_k: int = 5,
+        exclude_channel_id: str | None = None,
+    ):
+        """Return the top matching channel profiles, optionally excluding one channel."""
+        if top_k < 1:
+            raise ValueError("top_k must be greater than 0")
+
         query_vector = self.embed_text(profile_text)
         distance = Channel_charisteristic.channel_vector.cosine_distance(query_vector)
+
+        filters = [Channel_charisteristic.channel_vector.is_not(None)]
+        if exclude_channel_id is not None:
+            filters.append(Channel.channel_code != str(exclude_channel_id).strip())
 
         with SessionLocal() as db:
             rows = db.execute(
@@ -39,7 +51,7 @@ class VectorService:
                     Channel_charisteristic,
                     Channel_charisteristic.channel_id == Channel.id,
                 )
-                .where(Channel_charisteristic.channel_vector.is_not(None))
+                .where(*filters)
                 .order_by(distance)
                 .limit(top_k)
             ).all()

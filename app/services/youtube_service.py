@@ -190,10 +190,11 @@ class YouTubeService:
                 "title": snippet.get("title"),
                 "description": snippet.get("description"),
                 "custom_url": snippet.get("customUrl"),
-                "subscriber_count": int(stats.get("viewCount", 0)),
+                "subscriber_count": int(stats.get("subscriberCount", 0)),
                 "total_views": int(stats.get("viewCount",0)),
                 "video_count": int(stats.get("videoCount", 0)),
                 "hidden_subscriber_count": stats.get("hiddenSubscriberCount", False)
+                #category id depend on video so we will set default as gaming first
             }
 
         except HttpError as e:
